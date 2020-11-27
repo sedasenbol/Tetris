@@ -25,6 +25,16 @@ public class SpawnManager : MonoBehaviour
         
     }
 
+    private void OnEnable()
+    {
+        Tetro.OnTetroGrounded += CreateTetro;
+    }
+
+    private void OnDisable()
+    {
+        Tetro.OnTetroGrounded -= CreateTetro;
+    }
+
     private void CreateTetro()
     {
         int randomColor = Random.Range(0, 6);
