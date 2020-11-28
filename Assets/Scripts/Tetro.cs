@@ -9,20 +9,32 @@ public class Tetro : MonoBehaviour
     public static event Action OnTetroGrounded;
     public static event Action OnGameOverCollision;
 
-    private const float GO_DOWN_SPEED = 5f;
-    private const float GAME_OVER_HEIGHT = 20f;
+    private const int GAME_OVER_HEIGHT = 22;
+    private float GoDownWaitSeconds = 1f;
     private bool isGrounded = false;
     private BoxCollider2D[] colliders;
+    private Transform[,] grid;
+    private Transform[] squares = new Transform[4];
+
     private void Start()
     {
+        for (int i= 0; i < 4; i++)
+        {
+            squares[i] = transform.GetChild(i).transform;
+        }
+
         colliders = GetComponentsInChildren<BoxCollider2D>();
+        grid = FindObjectOfType<Board>().TetroGrid;
+        
+        GoDown();
     }
+
     private void Update()
     {
-        IsGroundedCheck();
         if (!isGrounded)
         {
-            GoDown();
+            IsGroundedCheck();
+            GoDownFast();
             RotateCW();
             RotateCCW();
             MoveLeft();
@@ -30,13 +42,60 @@ public class Tetro : MonoBehaviour
         }
     }
 
+    private void IsGroundedCheck()
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            if (squares[i].position.y <= 0 || grid[Convert.ToInt32(squares[i].position.x), Convert.ToInt32(squares[i].position.y - 1)] != null)
+            {
+                isGrounded = true;
+            }
+        }
+    }
+
     public void GoDown()
+    {
+         StartCoroutine(GoDownSlowly());
+    }
+    private IEnumerator GoDownSlowly()
+    {
+        while(!isGrounded)
+        {
+            transform.position = new Vector2(transform.position.x, transform.position.y - 1);
+            yield return new WaitForSecondsRealtime(GoDownWaitSeconds);
+        }
+        AssignTetroToGrid();
+    }
+
+    private void GoDownFast()
     {
         if (Input.GetKey(KeyCode.DownArrow))
         {
-            transform.position = new Vector2(transform.position.x, transform.position.y - 5 * GO_DOWN_SPEED * Time.deltaTime);
+            GoDownWaitSeconds = 0.05f;
         }
-        transform.position = new Vector2(transform.position.x, transform.position.y - GO_DOWN_SPEED * Time.deltaTime);
+        else
+        {
+            GoDownWaitSeconds = 1f;
+        }
+    }
+
+    private void AssignTetroToGrid()
+    {
+        bool isGameOverCollision = false;
+        for (int i = 0; i < 4; i++)
+        {
+            grid[Convert.ToInt32(squares[i].position.x), Convert.ToInt32(squares[i].position.y)] = squares[i];
+            if (squares[i].position.y == GAME_OVER_HEIGHT)
+            {
+                isGameOverCollision = true;
+            }
+        }
+        if (isGameOverCollision)
+        {
+            OnGameOverCollision?.Invoke();
+            return;
+        }
+        OnTetroGrounded?.Invoke();
     }
 
     public void RotateCW()
@@ -57,62 +116,39 @@ public class Tetro : MonoBehaviour
 
     public void MoveLeft()
     {
-        if (colliders[0].IsTouchingLayers(LayerMask.GetMask("LeftSide"))
-        || colliders[1].IsTouchingLayers(LayerMask.GetMask("LeftSide"))
-        || colliders[2].IsTouchingLayers(LayerMask.GetMask("LeftSide"))
-        || colliders[3].IsTouchingLayers(LayerMask.GetMask("LeftSide")))
-        {
-            return;
-        }
         if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
-            transform.position = new Vector2(transform.position.x - 1, transform.position.y);
+            bool isLeftSideAvailable = true;
+            for (int i = 0; i < 4; i++)
+            {
+                if (Convert.ToInt32(squares[i].position.x) == 0)
+                {
+                    isLeftSideAvailable = false;
+                }
+            }
+            if (isLeftSideAvailable)
+            {
+                transform.position = new Vector2(transform.position.x - 1, transform.position.y);
+            }
         }
-
     }
 
     public void MoveRight()
     {
-        if (colliders[0].IsTouchingLayers(LayerMask.GetMask("RightSide"))
-        || colliders[1].IsTouchingLayers(LayerMask.GetMask("RightSide"))
-        || colliders[2].IsTouchingLayers(LayerMask.GetMask("RightSide"))
-        || colliders[3].IsTouchingLayers(LayerMask.GetMask("RightSide")))
-        {
-            return;
-        }
         if (Input.GetKeyDown(KeyCode.RightArrow))
         {
-            transform.position = new Vector2(transform.position.x + 1, transform.position.y);
-        }
-    }
-    private void IsGroundedCheck()
-    {
-        if(isGrounded)
-        {
-            return;
-        }
-        if (colliders[0].IsTouchingLayers(LayerMask.GetMask("Ground","Tetro"))
-            || colliders[1].IsTouchingLayers(LayerMask.GetMask("Ground","Tetro"))
-            || colliders[2].IsTouchingLayers(LayerMask.GetMask("Ground", "Tetro"))
-            || colliders[3].IsTouchingLayers(LayerMask.GetMask("Ground", "Tetro")))
-        {
-            if (transform.position.y <= GAME_OVER_HEIGHT)
+            bool isRightSideAvailable = true;
+            for (int i = 0; i < 4; i++)
             {
-                isGrounded = true;
-                OnTetroGrounded?.Invoke();
+                if (Convert.ToInt32(squares[i].position.x) == 9)
+                {
+                    isRightSideAvailable = false;
+                }
             }
-            else
+            if (isRightSideAvailable)
             {
-                OnGameOverCollision?.Invoke();
+                transform.position = new Vector2(transform.position.x + 1, transform.position.y);
             }
-        }
-    }
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (collision.gameObject.layer == 8 || collision.gameObject.layer == 9)
-        {
-            isGrounded = true;
-            OnTetroGrounded?.Invoke();
         }
     }
 }

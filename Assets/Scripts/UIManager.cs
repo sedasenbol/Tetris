@@ -36,17 +36,17 @@ public class UIManager : MonoBehaviour
 
     private void Update()
     {
-        
+        scoreText.text = gameState.Score.ToString();
     }
 
     private void OnEnable()
     {
-        GameManager.OnGameOver += LoadGameOverScreen;
+        Tetro.OnGameOverCollision += LoadGameOverScreen;
     }
 
     private void OnDisable()
     {
-        GameManager.OnGameOver -= LoadGameOverScreen;
+        Tetro.OnGameOverCollision -= LoadGameOverScreen;
     }
 
     private void LoadGameOverScreen()

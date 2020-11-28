@@ -6,14 +6,16 @@ using System;
 
 public class GameManager : MonoBehaviour
 {
-    public static event Action OnGameOver;
 
     private GameState gameState;
+
     private void OnEnable()
     {
         UIManager.OnMenuButtonClicked += LoadMenu;
         UIManager.OnPauseButtonClicked += PauseOrResumeGame;
         UIManager.OnPlayButtonClicked += StartGame;
+        Tetro.OnGameOverCollision += GameOver;
+        Board.OnClearLines += IncreaseScore;
     }
 
     private void OnDisable()
@@ -21,6 +23,8 @@ public class GameManager : MonoBehaviour
         UIManager.OnMenuButtonClicked -= LoadMenu;
         UIManager.OnPauseButtonClicked -= PauseOrResumeGame;
         UIManager.OnPlayButtonClicked -= StartGame;
+        Tetro.OnGameOverCollision -= GameOver;
+        Board.OnClearLines -= IncreaseScore;
     }
     
     private void LoadMenu()
@@ -30,22 +34,39 @@ public class GameManager : MonoBehaviour
 
     private void PauseOrResumeGame()
     {
+        if (gameState.CurrentState == GameState.State.Paused)
+        {
+            gameState.CurrentState = GameState.State.OnPlay;
+        }
+        else
+        {
+            gameState.CurrentState = GameState.State.Paused;
+        }
         Time.timeScale = Mathf.Abs(Time.timeScale - 1);
     }
 
     private void StartGame()
     {
+        gameState.CurrentState = GameState.State.OnPlay;
         Time.timeScale = 1f;
     }
 
     private void GameOver()
     {
+        gameState.CurrentState = GameState.State.GameOver;
         Time.timeScale = 0f;
-        OnGameOver?.Invoke();
     }
 
+    private void IncreaseScore()
+    {
+        gameState.Score += 100;
+    }
     private void Start()
     {
+        gameState = new GameState();
+        gameState.Score = 0;
+        gameState.CurrentState = GameState.State.Start;
+
         Time.timeScale = 0f;
     }
 
