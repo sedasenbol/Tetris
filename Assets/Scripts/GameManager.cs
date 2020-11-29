@@ -6,7 +6,6 @@ using System;
 
 public class GameManager : MonoBehaviour
 {
-
     private GameState gameState;
 
     private void OnEnable()
@@ -26,10 +25,11 @@ public class GameManager : MonoBehaviour
         Tetro.OnGameOverCollision -= GameOver;
         Board.OnClearLines -= IncreaseScore;
     }
-    
-    private void LoadMenu()
+
+    private void StartGame()
     {
-        SceneManager.LoadScene(0);
+        gameState.CurrentState = GameState.State.OnPlay;
+        Time.timeScale = 1f;
     }
 
     private void PauseOrResumeGame()
@@ -45,22 +45,22 @@ public class GameManager : MonoBehaviour
         Time.timeScale = Mathf.Abs(Time.timeScale - 1);
     }
 
-    private void StartGame()
-    {
-        gameState.CurrentState = GameState.State.OnPlay;
-        Time.timeScale = 1f;
-    }
-
     private void GameOver()
     {
         gameState.CurrentState = GameState.State.GameOver;
         Time.timeScale = 0f;
     }
 
+    private void LoadMenu()
+    {
+        SceneManager.LoadScene(0);
+    }
+
     private void IncreaseScore()
     {
         gameState.Score += 100;
     }
+
     private void Start()
     {
         gameState = new GameState();
@@ -68,11 +68,6 @@ public class GameManager : MonoBehaviour
         gameState.CurrentState = GameState.State.Start;
 
         Time.timeScale = 0f;
-    }
-
-    private void Update()
-    {
-        
     }
 
     public GameState StateOfTheGame { get { return gameState; } }

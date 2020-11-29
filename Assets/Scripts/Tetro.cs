@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using DG.Tweening;
 using System;
 
 public class Tetro : MonoBehaviour
@@ -10,56 +9,27 @@ public class Tetro : MonoBehaviour
     public static event Action OnGameOverCollision;
 
     private const int GAME_OVER_HEIGHT = 22;
-    private float GoDownWaitSeconds = 1f;
+    private const int SQUARE_COUNT = 4;
+    private float GoDownWaitSeconds = 0.5f;
     private bool isGrounded = false;
-    private BoxCollider2D[] colliders;
     private Transform[,] grid;
-    private Transform[] squares = new Transform[4];
-
-    private void Start()
-    {
-        for (int i= 0; i < 4; i++)
-        {
-            squares[i] = transform.GetChild(i).transform;
-        }
-
-        colliders = GetComponentsInChildren<BoxCollider2D>();
-        grid = FindObjectOfType<Board>().TetroGrid;
-        
-        GoDown();
-    }
-
-    private void Update()
-    {
-        if (!isGrounded)
-        {
-            IsGroundedCheck();
-            GoDownFast();
-            RotateCW();
-            RotateCCW();
-            MoveLeft();
-            MoveRight();
-        }
-    }
+    private Transform[] squares = new Transform[SQUARE_COUNT];
 
     private void IsGroundedCheck()
     {
-        for (int i = 0; i < 4; i++)
+        foreach (Transform xform in squares)
         {
-            if (squares[i].position.y <= 0 || grid[Convert.ToInt32(squares[i].position.x), Convert.ToInt32(squares[i].position.y - 1)] != null)
+            if (xform.position.y <= 0 || PositionToGrid(xform.position + new Vector3(0, -1, 0)) != null)
             {
                 isGrounded = true;
+                return;
             }
         }
     }
 
-    public void GoDown()
+    private IEnumerator GoDown()
     {
-         StartCoroutine(GoDownSlowly());
-    }
-    private IEnumerator GoDownSlowly()
-    {
-        while(!isGrounded)
+        while (!isGrounded)
         {
             transform.position = new Vector2(transform.position.x, transform.position.y - 1);
             yield return new WaitForSecondsRealtime(GoDownWaitSeconds);
@@ -71,7 +41,7 @@ public class Tetro : MonoBehaviour
     {
         if (Input.GetKey(KeyCode.DownArrow))
         {
-            GoDownWaitSeconds = 0.05f;
+            GoDownWaitSeconds = 0.03f;
         }
         else
         {
@@ -82,10 +52,12 @@ public class Tetro : MonoBehaviour
     private void AssignTetroToGrid()
     {
         bool isGameOverCollision = false;
-        for (int i = 0; i < 4; i++)
+
+        foreach (Transform xform in squares)
         {
-            grid[Convert.ToInt32(squares[i].position.x), Convert.ToInt32(squares[i].position.y)] = squares[i];
-            if (squares[i].position.y == GAME_OVER_HEIGHT)
+            grid[Convert.ToInt32(xform.position.x), Convert.ToInt32(xform.position.y)] = xform;
+
+            if (xform.position.y == GAME_OVER_HEIGHT)
             {
                 isGameOverCollision = true;
             }
@@ -98,30 +70,88 @@ public class Tetro : MonoBehaviour
         OnTetroGrounded?.Invoke();
     }
 
-    public void RotateCW()
+    private Transform PositionToGrid(Vector3 position)
     {
-        if (Input.GetKeyDown(KeyCode.S))
+        return grid[Convert.ToInt32(position.x), Convert.ToInt32(position.y)];
+    }
+
+    private Vector3 RotatedSquarePos(Vector3 position, bool isCW)
+    {
+        if (isCW)
         {
-            transform.Rotate(0f, 0f, 90f, Space.Self);
+            return new Vector3(-position.y, position.x, 0);
+        }
+        else
+        {
+            return new Vector3(position.y, -position.x, 0);
         }
     }
 
-    public void RotateCCW()
+    private void RotateCW()
     {
-        if (Input.GetKeyDown(KeyCode.A))
+        if (!Input.GetKeyDown(KeyCode.S))
         {
-            transform.Rotate(0f, 0f, -90f, Space.Self);
+            return;
+        }
+
+        bool canRotateCW = true;
+
+        foreach (Transform xform in squares)
+        {
+            Vector2 newPosition = RotatedSquarePos(xform.localPosition, true) + transform.position + new Vector3(0, -1, 0);
+
+            if (newPosition.x < 0 || newPosition.x > 9 || newPosition.y < 0 || PositionToGrid(newPosition) != null)
+            {
+                canRotateCW = false;
+            }
+        }
+
+        if (canRotateCW)
+        {
+            foreach (Transform xform in squares)
+            {
+                xform.RotateAround(squares[0].position, new Vector3(0, 0, 1), 90);
+            }
         }
     }
 
-    public void MoveLeft()
+    private void RotateCCW()
+    {
+        if (!Input.GetKeyDown(KeyCode.A))
+        {
+            return;
+        }
+
+        bool canRotateCCW = true;
+
+        foreach (Transform xform in squares)
+        {
+            Vector2 newSquarePos = RotatedSquarePos(xform.localPosition, false) + transform.position + new Vector3(0, -1, 0);
+            if (newSquarePos.x < 0 || newSquarePos.x > 9 || newSquarePos.y < 0 || PositionToGrid(newSquarePos) != null)
+            {
+                canRotateCCW = false;
+            }
+        }
+
+        if (canRotateCCW)
+        {
+            foreach (Transform xform in squares)
+            {
+                xform.RotateAround(squares[0].position, new Vector3(0, 0, 1), -90);
+            }
+        }
+    }
+
+    private void MoveLeft()
     {
         if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
             bool isLeftSideAvailable = true;
-            for (int i = 0; i < 4; i++)
+
+            foreach (Transform xform in squares)
             {
-                if (Convert.ToInt32(squares[i].position.x) == 0)
+                Vector3 newSquarePos = new Vector3(xform.position.x - 1, xform.position.y, 0);
+                if (Convert.ToInt32(newSquarePos.x) == -1 || PositionToGrid(newSquarePos) != null)
                 {
                     isLeftSideAvailable = false;
                 }
@@ -133,14 +163,16 @@ public class Tetro : MonoBehaviour
         }
     }
 
-    public void MoveRight()
+    private void MoveRight()
     {
         if (Input.GetKeyDown(KeyCode.RightArrow))
         {
             bool isRightSideAvailable = true;
-            for (int i = 0; i < 4; i++)
+
+            foreach (Transform xform in squares)
             {
-                if (Convert.ToInt32(squares[i].position.x) == 9)
+                Vector3 newSquarePos = new Vector3(xform.position.x + 1, xform.position.y, 0);
+                if (Convert.ToInt32(newSquarePos.x) == 10 || PositionToGrid(newSquarePos) != null)
                 {
                     isRightSideAvailable = false;
                 }
@@ -149,6 +181,43 @@ public class Tetro : MonoBehaviour
             {
                 transform.position = new Vector2(transform.position.x + 1, transform.position.y);
             }
+        }
+    }
+
+    private void AnyChildLeft()
+    {
+        if (transform.childCount == 0)
+        {
+            Destroy(this.gameObject);
+        }
+    }
+    private void Start()
+    {
+        for (int i = 0; i < SQUARE_COUNT; i++)
+        {
+            squares[i] = transform.GetChild(i).transform;
+        }
+
+        grid = FindObjectOfType<Board>().TetroGrid;
+
+        StartCoroutine(GoDown());
+    }
+
+    private void Update()
+    {
+        if (!isGrounded)
+        {
+            IsGroundedCheck();
+
+            GoDownFast();
+            RotateCW();
+            RotateCCW();
+            MoveLeft();
+            MoveRight();
+        }
+        else
+        {
+            AnyChildLeft();
         }
     }
 }
