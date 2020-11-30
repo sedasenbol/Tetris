@@ -16,7 +16,6 @@ public class GameManager : MonoBehaviour
         UIManager.OnPauseButtonClicked += PauseOrResumeGame;
         UIManager.OnPlayButtonClicked += StartGame;
         Tetro.OnGameOverCollision += GameOver;
-        Board.OnClearLines += IncreaseScore;
     }
 
     private void OnDisable()
@@ -25,7 +24,6 @@ public class GameManager : MonoBehaviour
         UIManager.OnPauseButtonClicked -= PauseOrResumeGame;
         UIManager.OnPlayButtonClicked -= StartGame;
         Tetro.OnGameOverCollision -= GameOver;
-        Board.OnClearLines -= IncreaseScore;
     }
 
     private void StartGame()
@@ -58,9 +56,23 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene(0);
     }
 
-    private void IncreaseScore()
+    public void IncreaseScore(int lineCount)
     {
-        gameState.Score += 100;
+        switch (lineCount)
+        {
+            case 1:
+                gameState.Score += 100;
+                break;
+            case 2:
+                gameState.Score += 400;
+                break;
+            case 3:
+                gameState.Score += 900;
+                break;
+            case 4:
+                gameState.Score += 2000;
+                break;
+        }
     }
 
     private void Start()

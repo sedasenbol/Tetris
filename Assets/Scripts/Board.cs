@@ -6,8 +6,6 @@ using System;
 
 public class Board : MonoBehaviour
 {
-    public static event Action OnClearLines;
-
     private const float SQUARE_LENGTH =0.5f;
     private const int BOARD_HEIGHT = 22;
     private const int BOARD_WIDTH = 10;
@@ -15,6 +13,8 @@ public class Board : MonoBehaviour
     [SerializeField]
     private Transform emptyCell;
     private Transform[,] grid = new Transform[BOARD_WIDTH, BOARD_HEIGHT + 8];
+
+    private GameManager gameManager;
 
     private void OnEnable()
     {
@@ -54,9 +54,9 @@ public class Board : MonoBehaviour
             if (isLineFull)
             {
                 linesToClear.Add(i);
-                OnClearLines?.Invoke();
             }
         }
+        gameManager.IncreaseScore(linesToClear.Count);
         ClearLines(linesToClear);
     }
 
@@ -104,6 +104,8 @@ public class Board : MonoBehaviour
     {
         emptyCell.localScale = new Vector3(1,1,1) * SQUARE_LENGTH;
         DrawEmptyCells();
+
+        gameManager = FindObjectOfType<GameManager>();
     }
 
     public Transform[,] TetroGrid { get { return grid; } set { grid = value; } }
