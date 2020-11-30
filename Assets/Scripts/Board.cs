@@ -8,11 +8,13 @@ public class Board : MonoBehaviour
 {
     public static event Action OnClearLines;
 
-    [SerializeField]
-    private Transform emptyCell;
-    private Transform[,] grid = new Transform[BOARD_WIDTH, BOARD_HEIGHT+8];
+    private const float SQUARE_LENGTH =0.5f;
     private const int BOARD_HEIGHT = 22;
     private const int BOARD_WIDTH = 10;
+
+    [SerializeField]
+    private Transform emptyCell;
+    private Transform[,] grid = new Transform[BOARD_WIDTH, BOARD_HEIGHT + 8];
 
     private void OnEnable()
     {
@@ -26,9 +28,9 @@ public class Board : MonoBehaviour
 
     private void DrawEmptyCells()
     {
-        for (int y = 0; y < BOARD_HEIGHT; y++)
+        for (float y = 0; y < BOARD_HEIGHT * SQUARE_LENGTH; y= y + SQUARE_LENGTH)
         {
-            for (int x = 0; x < BOARD_WIDTH; x++)
+            for (float x = 0; x < BOARD_WIDTH * SQUARE_LENGTH; x = x + SQUARE_LENGTH)
             {
                 var clone = Instantiate<Transform>(emptyCell, new Vector3(x, y, 0), Quaternion.identity, transform);
                 clone.name = "x = " + x + ", y = " + y;
@@ -89,7 +91,7 @@ public class Board : MonoBehaviour
             {
                 if (grid[i, j] != null)
                 {
-                    grid[i, j].position = new Vector2(grid[i, j].position.x, grid[i, j].position.y - 1);
+                    grid[i, j].position = new Vector2(grid[i, j].position.x, grid[i, j].position.y - SQUARE_LENGTH);
 
                     grid[i, j - 1] = grid[i, j];
                     grid[i, j] = null;
@@ -100,6 +102,7 @@ public class Board : MonoBehaviour
 
     private void Start()
     {
+        emptyCell.localScale = new Vector3(1,1,1) * SQUARE_LENGTH;
         DrawEmptyCells();
     }
 

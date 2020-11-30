@@ -6,6 +6,8 @@ using System;
 
 public class GameManager : MonoBehaviour
 {
+    private const float SQUARE_LENGTH = 0.5f;
+    private Camera cam;
     private GameState gameState;
 
     private void OnEnable()
@@ -68,6 +70,9 @@ public class GameManager : MonoBehaviour
         gameState.CurrentState = GameState.State.Start;
 
         Time.timeScale = 0f;
+
+        cam = FindObjectOfType<Camera>();
+        cam.orthographicSize = 15 * SQUARE_LENGTH;
     }
 
     public GameState StateOfTheGame { get { return gameState; } }
