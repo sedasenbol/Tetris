@@ -29,6 +29,7 @@ public class Tetro : MonoBehaviour
                 {
                     isGrounded = true;
                     AssignTetroToGrid();
+                    ChangeColor();
                     return;
                 }
             }
@@ -183,6 +184,14 @@ public class Tetro : MonoBehaviour
             {
                 transform.position = new Vector2(transform.position.x + SQUARE_LENGTH, transform.position.y);
             }
+        }
+    }
+
+    private void ChangeColor()
+    {
+        foreach (Transform xform in squares)
+        {
+            xform.GetComponent<Renderer>().material.color = new Color(0.5f, 0.5f, 0.5f);
         }
     }
 

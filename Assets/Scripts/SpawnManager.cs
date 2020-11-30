@@ -20,7 +20,7 @@ public class SpawnManager : MonoBehaviour
                                                             { new Vector2( 0, 0 ), new Vector2( -1, 0 ), new Vector2( 0, 1 ), new Vector2( 1, 1) }, // Z //
                                                             { new Vector2( 0, 0 ), new Vector2( -1, 0 ), new Vector2( 1, 0), new Vector2( 0, 1) }, // T //
                                                             { new Vector2( 0, 0 ), new Vector2( 1, 0 ), new Vector2( 0, 1 ), new Vector2( -1, 1) }}; // Rotated Z //
-    private int[,] randomColorMatrix = new int[6, 3] { { 0, 1, 1 }, { 0, 1, 0 }, { 1, 0, 0 }, { 0, 0, 1 }, { 1, 1, 0 }, { 1, 0, 1 } };
+    private int[,] randomColorMatrix = new int[7, 3] { { 0, 1, 1 }, { 0, 1, 0 }, { 1, 0, 0 }, { 0, 0, 1 }, { 1, 1, 0 }, { 1, 0, 1 } , { 1, 1, 1 } };
 
     private void Start()
     {
@@ -50,15 +50,15 @@ public class SpawnManager : MonoBehaviour
 
     private void CreateTetro()
     {
-        int randomColor = Random.Range(0, 6);
-        Color color = new Color(randomColorMatrix[randomColor,0], randomColorMatrix[randomColor, 1], randomColorMatrix[randomColor, 2]);
+        int randomNumber = Random.Range(0, 7);
+
+        Color color = new Color(randomColorMatrix[randomNumber, 0], randomColorMatrix[randomNumber, 1], randomColorMatrix[randomNumber, 2]);
 
         GameObject tetro = Instantiate(tetroPrefab, spawnPos, Quaternion.identity, tetroContainer);
-        int randomTetro = Random.Range(0, 7);
 
         for (int i = 0; i < SQUARE_COUNT; i++)
         {
-            GameObject square = Instantiate(squarePrefab, squarePositions[randomTetro, i] + spawnPos, Quaternion.identity, tetro.transform);
+            GameObject square = Instantiate(squarePrefab, squarePositions[randomNumber, i] + spawnPos, Quaternion.identity, tetro.transform);
             square.GetComponent<Renderer>().material.color = color;
         }
     }
