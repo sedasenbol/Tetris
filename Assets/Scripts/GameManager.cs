@@ -34,14 +34,7 @@ public class GameManager : MonoBehaviour
 
     private void PauseOrResumeGame()
     {
-        if (gameState.CurrentState == GameState.State.Paused)
-        {
-            gameState.CurrentState = GameState.State.OnPlay;
-        }
-        else
-        {
-            gameState.CurrentState = GameState.State.Paused;
-        }
+        gameState.CurrentState = (gameState.CurrentState == GameState.State.Paused) ? gameState.CurrentState = GameState.State.OnPlay : gameState.CurrentState = GameState.State.Paused;
         Time.timeScale = Mathf.Abs(Time.timeScale - 1);
     }
 
